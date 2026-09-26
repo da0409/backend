@@ -2,7 +2,7 @@
 
 ## 工作区与 Java 25
 
-工程位于 /home/tinyblack/backend，远程为 da0409/backend。所有业务代码为 Java 与 C++；旧项目 /home/tinyblack/hackathon 不参与构建。
+工程位于 /home/tinyblack/backend，远程为 da0409/backend。所有业务代码为 Java；旧项目 /home/tinyblack/hackathon 不参与构建。
 
 当前 WSL 已安装 OpenJDK 25.0.4.1。系统默认 java、javac 指向 Java 25，登录终端通过 /etc/profile.d/java25.sh 设置 JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64。Maven 使用仓库提供的 Wrapper 3.9.16，不必另装 Maven。
 
@@ -23,7 +23,7 @@ bash mvnw -v
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y openjdk-25-jdk-headless cmake g++ mysql-server ffmpeg
+sudo apt-get install -y openjdk-25-jdk-headless mysql-server ffmpeg
 cd /home/tinyblack/backend
 sudo systemctl start mysql
 sudo bash scripts/provision-local.sh "$(id -u):$(id -g)"
@@ -40,7 +40,7 @@ sudo bash scripts/install-service.sh "$(id -un)"
 ```bash
 cd /home/tinyblack/backend
 
-# 完整构建、Java 测试、C++ 编译和 CTest
+# 完整构建与 Java/MySQL 测试
 bash scripts/test.sh
 
 # 手动启动（已开启后台服务时先停止它，避免端口冲突）
@@ -57,7 +57,7 @@ journalctl -u timecapsule-java -n 50 --no-pager
 健康检查：http://localhost:8081/v1/health 。默认仅监听本机。
 这是 Java 服务的 8081 端口；8080 是旧 Python 服务，不能用来验收新实现。
 本工程没有引入 Swagger 页面，可通过 Postman、curl 或自动化测试调用接口。
-C++ 共享库生成在 target/native/libtimecapsule_geo.so，运行 jar 时需保持该目录，或用 -Dgeo.library 指定绝对路径。
+距离计算已改为纯 Java，运行 jar 无需原生共享库或额外的原生访问参数。健康接口 runtime 为 java25。
 jar 启动时执行 Flyway 迁移，不执行包含 DROP TABLE 的原始 schema.sql。
 
 ## 手工验收顺序

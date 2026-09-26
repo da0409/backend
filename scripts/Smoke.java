@@ -55,7 +55,7 @@ public class Smoke {
         String media=field(upload.body(),"mediaId");
         LocalDate today=LocalDate.now(ZoneId.of("Asia/Shanghai"));
         String c=call("POST","/capsules",author.get("token"),"""
-            {"title":"比赛模拟：Java 与 C++ 联调","question":"这是自动联调生成的模拟内容。",
+            {"title":"比赛模拟：纯 Java 联调","question":"这是自动联调生成的模拟内容。",
              "poiId":"java_demo_poi","poiName":"比赛模拟地点","lng":100.1789,"lat":27.1156,
              "mediaList":[{"mediaId":"%s","caption":"程序生成的模拟图片"}],
              "answerBeginTime":"%s","answerEndTime":"%s","blurFace":false}
@@ -71,6 +71,6 @@ public class Smoke {
         Properties saved=new Properties();saved.setProperty("username",author.get("username"));saved.setProperty("password",author.get("password"));saved.setProperty("capsule",capsule);
         try(var out=Files.newOutputStream(access)){saved.store(out,"Local synthetic demo access; never commit");}
         Files.setPosixFilePermissions(access,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
-        System.out.println("PASS: Java/C++ live register/upload/create/recommend/accept/checkin/reply/timeline");
+        System.out.println("PASS: Java live register/upload/create/recommend/accept/checkin/reply/timeline");
     }
 }

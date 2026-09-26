@@ -1,7 +1,7 @@
 package com.hackathon.backend;
 import org.junit.jupiter.api.Test;
 import java.nio.file.*;
-import com.hackathon.backend.nativegeo.NativeGeo;
+
 import static org.junit.jupiter.api.Assertions.*;
 class ArchitectureTests {
     @Test void controllersDependOnServicesNotMappers() throws Exception {
@@ -14,10 +14,5 @@ class ArchitectureTests {
             }
         }
     }
-    @Test void nativeLibraryValidatesCoordinatesAndCrossesDateLine() {
-        assertEquals(0,NativeGeo.distance(0,0,0,0));
-        assertTrue(NativeGeo.distance(179.999,0,-179.999,0)<300);
-        assertThrows(IllegalArgumentException.class,()->NativeGeo.distance(181,0,0,0));
-        assertThrows(IllegalArgumentException.class,()->NativeGeo.distance(0,Double.NaN,0,0));
-    }
+
 }

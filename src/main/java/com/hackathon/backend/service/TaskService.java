@@ -3,7 +3,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hackathon.backend.mapper.*;
 import com.hackathon.backend.pojo.entity.*;
 import com.hackathon.backend.pojo.dto.Requests;
-import com.hackathon.backend.nativegeo.NativeGeo;
+import com.hackathon.backend.geo.GeoDistance;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
@@ -27,7 +27,7 @@ public class TaskService {
         List<Candidate> choices=new ArrayList<>();
         for(Capsule c:capsules.selectList(new QueryWrapper<Capsule>().ne("creator_id",user).le("answer_begin_time",end).ge("answer_end_time",begin).ge("answer_end_time",today()))) {
             if(claimed.contains(c.getId())||c.getLng()==null||c.getLat()==null)continue;
-            double meters=NativeGeo.distance(dest.getLng(),dest.getLat(),c.getLng(),c.getLat());
+            double meters=GeoDistance.distance(dest.getLng(),dest.getLat(),c.getLng(),c.getLat());
             if(meters<=radius)choices.add(new Candidate(c,meters,capsuleService.replyCount(c.getId())));
         }
         choices.sort(Comparator.comparing((Candidate x)->!x.capsule().getPoiId().equals(poiId)).thenComparingDouble(Candidate::meters)
@@ -69,7 +69,7 @@ public class TaskService {
     public Map<String,Object> checkin(String id,Requests.Checkin b,String user) {
         Assignment a=owned(id,user,true);Capsule c=capsuleService.get(a.getCapsuleId(),false);window(c);
         require(Set.of("ACCEPTED","CHECKED_IN").contains(a.getStatus()),409,"当前状态不能签到");
-        double meters=NativeGeo.distance(c.getLng(),c.getLat(),b.lng(),b.lat());require(meters<=300,422,"超出 300 米签到范围");
+        double meters=GeoDistance.distance(c.getLng(),c.getLat(),b.lng(),b.lat());require(meters<=300,422,"超出 300 米签到范围");
         a.setStatus("CHECKED_IN");a.setCheckinTime(now());a.setLng(b.lng());a.setLat(b.lat());assignments.updateById(a);
         return map("taskId",c.getId(),"assignmentId",a.getId(),"status",a.getStatus(),"distanceToPoi",Math.round(meters),"verificationMethod","CLIENT_COORDINATES");
     }

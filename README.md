@@ -1,6 +1,6 @@
-# 后来呢 Java 与 C++ 后端
+# 后来呢 Java 后端
 
-沿用现有 Spring Boot 4.1.1、Java 25、MyBatis-Plus、八个 POJO 与 MySQL 表设计，完成 Controller → Service → Mapper 分层。C++ 通过 JNI 执行推荐、签到的距离计算；不使用 Python。
+沿用现有 Spring Boot 4.1.1、Java 25、MyBatis-Plus、八个 POJO 与 MySQL 表设计，完成 Controller → Service → Mapper 分层。距离计算使用纯 Java Haversine 实现；不使用 Python。
 
 ## 开始使用
 
@@ -15,7 +15,7 @@ java scripts/Smoke.java
 ```
 
 最后一条命令会新增明确标注的比赛模拟数据，验证真实 HTTP 完整流程。
-新环境需要先按 [运行指南](docs/RUNNING.md) 配置 JDK、MySQL、CMake、g++、ffmpeg 及本地凭据。
+新环境需要先按 [运行指南](docs/RUNNING.md) 配置 JDK、MySQL、ffmpeg 及本地凭据。
 
 ## 架构
 
@@ -24,14 +24,14 @@ java scripts/Smoke.java
 - mapper/：MyBatis-Plus BaseMapper 与参数化行锁查询。
 - pojo/entity/：保留现有实体，只补必要持久字段和映射。
 - pojo/dto/：独立请求模型，避免客户端写入实体所有权和状态字段。
-- native/：C++17 Haversine 距离库与 CTest，通过 nativegeo/ 的 JNI 调用。
+- geo/：纯 Java Haversine 距离计算，用于推荐、签到和 POI 坐标校验。
 - db/migration/：Flyway 版本化迁移，运行时不使用原始清表脚本。
 - scripts/：Shell 环境配置和启动、纯 Java 实时验收工具。
 
 ## 已实现与验证
 
 登录、会话、媒体上传、胶囊管理、日期与目的地推荐、领取、300 米签到、回信及地点时间线。
-18 项 Java 测试、C++ CTest、Maven verify、真实服务闭环和重启持久化已通过。
+距离单元测试、MySQL 集成测试及实际接口验收记录见 HANDOFF.md。
 测试连接独立 MySQL 库，未使用 H2/SQLite 替代。
 
 正式业务契约以《接口文档(1).md》为准；讨论稿仍待团队确认，不自动变成新需求。
