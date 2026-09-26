@@ -1,3 +1,26 @@
 spring:
   application:
     name: backend
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/capsule_java?connectionTimeZone=Asia/Shanghai}
+    username: ${DB_USER:}
+    password: ${DB_PASSWORD:}
+  sql:
+    init:
+      mode: never
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 201MB
+server:
+  address: 127.0.0.1
+  port: ${PORT:8081}
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      table-prefix: t_
+      id-type: input
+app:
+  media-dir: ${MEDIA_DIR:var/media}

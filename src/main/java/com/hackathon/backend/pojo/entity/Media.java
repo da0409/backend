@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
  */
 @Data
 public class Media {
+    private String filename;
+    private String mime;
 
     /** 主键，素材ID（mediaId），形如 m_20260924001（DB字段：id） */
     private String id;

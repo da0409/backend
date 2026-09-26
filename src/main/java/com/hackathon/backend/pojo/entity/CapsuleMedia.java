@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class CapsuleMedia {
 
     /** 自增主键（DB字段：id） */
+    @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.AUTO)
     private Long id;
 
     /** 关联时间胶囊ID（DB字段：capsule_id） */

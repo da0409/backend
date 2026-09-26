@@ -1,6 +1,7 @@
 package com.hackathon.backend.pojo.entity;
 
 import lombok.Data;
+import com.baomidou.mybatisplus.annotation.TableField;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -64,8 +65,10 @@ public class Capsule {
     private LocalDateTime updateTime;
 
     /** 素材数量，派生统计字段，不落库 */
+    @TableField(exist = false)
     private Integer mediaCount;
 
     /** 已收到回信数量，派生统计字段，不落库 */
+    @TableField(exist = false)
     private Integer replyCount;
 }
