@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class ReplyMedia {
 
     /** 自增主键（DB字段：id） */
+    @com.baomidou.mybatisplus.annotation.TableId(type = com.baomidou.mybatisplus.annotation.IdType.AUTO)
     private Long id;
 
     /** 关联回信ID（DB字段：reply_id） */

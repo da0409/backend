@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
  */
 @Data
 public class Assignment {
+    private Double lng;
+    private Double lat;
 
     /** 主键，任务ID，形如 asg_20260924001（DB字段：id） */
     private String id;
