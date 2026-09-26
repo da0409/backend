@@ -1,6 +1,5 @@
 package com.hackathon.backend;
 
-import com.hackathon.backend.nativegeo.NativeGeo;
 import com.hackathon.backend.common.Support;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,7 +197,8 @@ class BackendApplicationTests {
         }
     }
     @Test void healthAndCurrentUserDoNotExposePassword() throws Exception {
-        var a=account();assertEquals("mysql",request("GET","/health",null,null).data().get("database").asText());
+        var a=account();var health=request("GET","/health",null,null).data();
+        assertEquals("mysql",health.get("database").asText());assertEquals("java25",health.get("runtime").asText());
         var user=request("GET","/auth/me",a.token(),null);
         assertEquals(a.id(),user.data().get("userId").asText());assertFalse(user.body().toString().contains(a.password()));
     }

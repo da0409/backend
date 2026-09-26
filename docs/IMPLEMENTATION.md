@@ -4,10 +4,11 @@
 
 保持现有 com.hackathon.backend 包和 pojo/entity 模型，Java 25、Spring Boot 4.1.1。MyBatis-Plus 升级到 Boot 4 专用 starter 3.5.17，避免 Boot 3 自动配置不兼容。依据：https://baomidou.com/en/getting-started/install/ 。
 
-Controller 只依赖 Service，负责 HTTP 与字段校验；Service 实现业务、事务、权限并调用 Mapper；Mapper 通过 MyBatis-Plus 和参数化 SQL 访问 MySQL。不在 Controller 查询数据库。JNI 的 C++ 模块只负责纯距离计算，不包含 HTTP 或数据库逻辑。
+Controller 只依赖 Service，负责 HTTP 与字段校验；Service 实现业务、事务、权限并调用 Mapper；Mapper 通过 MyBatis-Plus 和参数化 SQL 访问 MySQL。不在 Controller 查询数据库。geo.GeoDistance 使用纯 Java Haversine 计算球面距离，保留 6371000 米地球半径、经纬度范围与有限值校验，并限制浮点误差。构建与运行均不依赖 JNI、CMake 或 C++ 共享库。
 
 ## 接口补充
 
+- 健康接口 runtime 更新为 java25，路径、响应结构和业务规则不变。
 - /v1 前缀，{code,msg,data}；code=1 成功，错误 code 使用 HTTP 状态。日期 YYYY-MM-DD，事件时间 Asia/Shanghai 的 yyyy-MM-dd HH:mm:ss。
 - 新增 /auth/register、/auth/login、/auth/me、/auth/logout。密码哈希，令牌哈希存库，24 小时有效。
 - 公共 taskId 与 capsuleId 一一对应，采用同一不透明值；个人领取 assignmentId 独立生成。领取接收公共 taskId，其余操作接收 assignmentId，响应明确返回两者。

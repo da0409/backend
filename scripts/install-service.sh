@@ -7,13 +7,13 @@ task_user="${1:?Pass the non-root application user}"
 id "$task_user" >/dev/null
 task_root="$(pwd -P)"
 task_unit=/etc/systemd/system/timecapsule-java.service
-if [[ -f "$task_unit" ]] && ! grep -q 'Description=Timecapsule Java C++ API' "$task_unit"; then
+if [[ -f "$task_unit" ]] && ! grep -Eq '^Description=Timecapsule Java( C\+\+)? API$' "$task_unit"; then
   echo "Refusing to overwrite an unrelated service" >&2
   exit 1
 fi
 cat > "$task_unit" <<UNIT
 [Unit]
-Description=Timecapsule Java C++ API
+Description=Timecapsule Java API
 After=mysql.service
 Requires=mysql.service
 

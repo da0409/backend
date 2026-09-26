@@ -6,5 +6,5 @@ import java.util.Map;
 public class HealthService {
     private final HealthMapper mapper;
     public HealthService(HealthMapper mapper){this.mapper=mapper;}
-    public Map<String,Object> health(){return Map.of("status",mapper.ping()==1?"ok":"error","database","mysql","runtime","java25-cpp");}
+    public Map<String,Object> health(){return Map.of("status",mapper.ping()==1?"ok":"error","database","mysql","runtime","java25");}
 }

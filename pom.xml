@@ -103,16 +103,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-antrun-plugin</artifactId><version>3.2.0</version>
-                <executions><execution><id>native-geo</id><phase>generate-resources</phase><goals><goal>run</goal></goals>
-                    <configuration><target>
-                        <exec executable="cmake" failonerror="true"><arg value="-S"/><arg value="${project.basedir}/native"/><arg value="-B"/><arg value="${project.build.directory}/native"/><env key="JAVA_HOME" value="${java.home}"/></exec>
-                        <exec executable="cmake" failonerror="true"><arg value="--build"/><arg value="${project.build.directory}/native"/></exec>
-                        <exec executable="ctest" failonerror="true"><arg value="--test-dir"/><arg value="${project.build.directory}/native"/><arg value="--output-on-failure"/></exec>
-                    </target></configuration>
-                </execution></executions>
-            </plugin>
         </plugins>
     </build>
 

@@ -3,7 +3,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hackathon.backend.mapper.*;
 import com.hackathon.backend.pojo.entity.*;
 import com.hackathon.backend.pojo.dto.Requests;
-import com.hackathon.backend.nativegeo.NativeGeo;
+import com.hackathon.backend.geo.GeoDistance;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -41,7 +41,7 @@ public class CapsuleService {
             p=new Poi();p.setId(b.poiId());p.setName(b.poiName());p.setLng(b.lng());p.setLat(b.lat());
             p.setCityCode(b.cityCode());p.setCityName(b.cityName());p.setCreateTime(now());p.setUpdateTime(now());pois.insert(p);
         } else {
-            require(p.getLng()!=null&&p.getLat()!=null&&NativeGeo.distance(p.getLng(),p.getLat(),b.lng(),b.lat())<=20,409,"已有 POI 坐标不一致");
+            require(p.getLng()!=null&&p.getLat()!=null&&GeoDistance.distance(p.getLng(),p.getLat(),b.lng(),b.lat())<=20,409,"已有 POI 坐标不一致");
             require(b.poiName()==null||b.poiName().equals(p.getName()),409,"已有 POI 名称不一致");
         }
         Capsule c=new Capsule();c.setId(id("cap"));c.setTitle(b.title());c.setQuestion(b.question());c.setPoiId(p.getId());c.setPoiName(p.getName());
