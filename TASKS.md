@@ -19,3 +19,10 @@
 - 验收：干净构建与全部 Java/MySQL 测试、300 米/日期线/非法坐标边界、真实 HTTP 闭环；本地 commit。
 
 验收记录（2026-09-26）：24 项测试、Maven verify、无原生构建产物检查及纯 Java 实际接口闭环通过。健康接口 runtime=java25。GitHub 操作由用户执行。
+
+
+## INT-REST-01（2026-10-02）
+
+新增需登录的 GET /v1/capsules/discover?page=1&pageSize=10，返回跨用户问题列表（含媒体、坐标、创建者昵称、进行中领取数量）。原 GET /v1/capsules 仍默认只返回本人数据。前端通过同源 Vite 代理访问 /v1，不涉及数据库迁移。
+
+- INT-REST-01 状态：已完成。25 项 Java/MySQL 测试通过；前端 REST 适配和真实浏览器流程已验证。

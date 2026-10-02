@@ -36,6 +36,26 @@ class BackendApplicationTests {
     record Response(int status,JsonNode body) { JsonNode data(){return body.get("data");} }
     record Account(String token,String id,String username,String password) {}
     record Created(String id,Map<String,Object> payload) {}
+    @Test void discoverIncludesOtherUsersAndRequiresLogin() throws Exception {
+        var owner=account();var traveler=account();
+        var first=capsule(owner,Map.of());var second=capsule(traveler,Map.of());
+        assertEquals(401,request("GET","/capsules/discover",null,null).status());
+        var result=request("GET","/capsules/discover?page=1&pageSize=1",traveler.token(),null);
+        assertEquals(200,result.status());assertEquals(2,result.data().get("total").asInt());
+        assertEquals(1,result.data().get("rows").size());
+        var all=request("GET","/capsules/discover",traveler.token(),null).data().get("rows");
+        var ids=new HashSet<String>();
+        for(var row:all) {
+            ids.add(row.get("capsuleId").asText());
+            assertFalse(row.get("creatorName").asText().isBlank());
+            assertTrue(row.get("mediaList").size()>0);assertNotNull(row.get("lng"));
+            assertFalse(row.has("password"));assertFalse(row.has("token"));
+        }
+        assertEquals(Set.of(first.id(),second.id()),ids);
+        assertEquals(1,request("GET","/capsules",traveler.token(),null).data().get("total").asInt());
+        assertEquals(422,request("GET","/capsules/discover?pageSize=101",traveler.token(),null).status());
+    }
+
     @BeforeEach void clean() {
         String database=db.queryForObject("SELECT DATABASE()",String.class);
         assertEquals("capsule_java_test",database);

@@ -20,6 +20,7 @@ public class CapsuleController {
         @RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="10") int pageSize) {
         return ApiResponse.ok(service.list(user.getId(),creatorId,poiId,status,begin,end,page,pageSize));
     }
+    @GetMapping("/discover") public ApiResponse<?> discover(@RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="10") int pageSize) {return ApiResponse.ok(service.discover(page,pageSize));}
     @GetMapping("/{id}") public ApiResponse<?> detail(@PathVariable String id) {return ApiResponse.ok(service.detail(id));}
     @PutMapping public ApiResponse<?> update(@Valid @RequestBody Requests.CapsuleUpdate body,@RequestAttribute("currentUser") User user) {service.update(body,user.getId());return ApiResponse.ok(null);}
     @DeleteMapping("/{id}") public ApiResponse<?> delete(@PathVariable String id,@RequestAttribute("currentUser") User user) {service.delete(id,user.getId());return ApiResponse.ok(null);}

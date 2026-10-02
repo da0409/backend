@@ -1,3 +1,7 @@
+# 前端联调补充（2026-10-02）
+
+已补充需登录的跨用户发现接口 /v1/capsules/discover，以及 creatorName/activeClaimCount 展示字段。保持原 GET /v1/capsules 默认本人列表；无数据库迁移。25 项 Java 测试和 Maven verify 通过。前端仓库 /home/tinyblack/hackathon 的真实双账号适配与 Edge 浏览器全流程已通过。服务已在 8081 更新，GitHub 操作未执行。
+
 # 工作交接
 
 更新时间：2026-09-26。

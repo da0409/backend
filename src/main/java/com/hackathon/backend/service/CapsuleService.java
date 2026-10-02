@@ -14,8 +14,8 @@ import static com.hackathon.backend.common.BusinessException.require;
 @Service
 public class CapsuleService {
     private final CapsuleMapper capsules; private final PoiMapper pois;
-    private final ReplyMapper replies; private final AssignmentMapper assignments; private final MediaService media;
-    public CapsuleService(CapsuleMapper c,PoiMapper p,ReplyMapper r,AssignmentMapper a,MediaService m) {capsules=c;pois=p;replies=r;assignments=a;media=m;}
+    private final UserMapper users; private final ReplyMapper replies; private final AssignmentMapper assignments; private final MediaService media;
+    public CapsuleService(CapsuleMapper c,PoiMapper p,ReplyMapper r,AssignmentMapper a,MediaService m,UserMapper u) {users=u;capsules=c;pois=p;replies=r;assignments=a;media=m;}
     public Capsule get(String id,boolean lock) {
         Capsule c=lock?capsules.lock(id):capsules.selectById(id);require(c!=null,404,"胶囊不存在");return c;
     }
@@ -27,8 +27,13 @@ public class CapsuleService {
             "poiId",c.getPoiId(),"poiName",c.getPoiName(),"creatorId",c.getCreatorId(),"status",status(c),
             "cityCode",c.getCityCode(),"cityName",c.getCityName(),"answerBeginTime",c.getAnswerBeginTime(),"answerEndTime",c.getAnswerEndTime(),
             "createTime",time(c.getCreateTime()),"updateTime",time(c.getUpdateTime()),"mediaCount",refs.size(),"replyCount",replyCount(c.getId()));
+        User creator=users.selectById(c.getCreatorId()); v.put("creatorName",creator==null?"旅行者":creator.getNickname());
+        v.put("activeClaimCount",assignments.selectCount(new QueryWrapper<Assignment>().eq("capsule_id",c.getId()).in("status","ACCEPTED","CHECKED_IN")));
         if(detail) { v.put("mediaList",refs);v.put("lng",c.getLng());v.put("lat",c.getLat());v.put("blurFace",c.getBlurFace()); }
         return v;
+    }
+    public Map<String,Object> discover(int page,int size) {
+        return page(capsules.selectList(new QueryWrapper<Capsule>().orderByDesc("create_time").orderByAsc("id")).stream().map(c->view(c,true)).toList(),page,size);
     }
     public Map<String,Object> detail(String id) { return view(get(id,false),true); }
     @Transactional
