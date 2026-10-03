@@ -11,4 +11,6 @@ public class ReplyController {
     @GetMapping public ApiResponse<?> list(@RequestParam String capsuleId,@RequestParam(defaultValue="1") int page,@RequestParam(defaultValue="10") int pageSize) {return ApiResponse.ok(service.list(capsuleId,page,pageSize));}
     @GetMapping("/{id}") public ApiResponse<?> detail(@PathVariable String id) {return ApiResponse.ok(service.detail(id));}
     @DeleteMapping("/{id}") public ApiResponse<?> delete(@PathVariable String id,@RequestAttribute("currentUser") User user) {service.delete(id,user.getId());return ApiResponse.ok(null);}
+    @PostMapping("/{id}/satisfy") public ApiResponse<?> satisfy(@PathVariable String id,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.satisfy(id,user.getId(),true));}
+    @DeleteMapping("/{id}/satisfy") public ApiResponse<?> unsatisfy(@PathVariable String id,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.satisfy(id,user.getId(),false));}
 }

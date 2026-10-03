@@ -25,11 +25,13 @@ public class CapsuleService {
         var refs=media.capsuleRefs(c.getId());
         var v=map("capsuleId",c.getId(),"taskId",c.getId(),"title",c.getTitle(),"question",c.getQuestion(),
             "poiId",c.getPoiId(),"poiName",c.getPoiName(),"creatorId",c.getCreatorId(),"status",status(c),
-            "cityCode",c.getCityCode(),"cityName",c.getCityName(),"answerBeginTime",c.getAnswerBeginTime(),"answerEndTime",c.getAnswerEndTime(),
+            "cityCode",c.getCityCode(),"cityName",c.getCityName(),"sceneId",c.getSceneId(),"sceneName",c.getSceneName(),
+            "answerBeginTime",c.getAnswerBeginTime(),"answerEndTime",c.getAnswerEndTime(),
             "createTime",time(c.getCreateTime()),"updateTime",time(c.getUpdateTime()),"mediaCount",refs.size(),"replyCount",replyCount(c.getId()));
         User creator=users.selectById(c.getCreatorId()); v.put("creatorName",creator==null?"旅行者":creator.getNickname());
         v.put("activeClaimCount",assignments.selectCount(new QueryWrapper<Assignment>().eq("capsule_id",c.getId()).in("status","ACCEPTED","CHECKED_IN")));
-        if(detail) { v.put("mediaList",refs);v.put("lng",c.getLng());v.put("lat",c.getLat());v.put("blurFace",c.getBlurFace()); }
+        if(detail) { v.put("mediaList",refs);v.put("lng",c.getLng());v.put("lat",c.getLat());v.put("blurFace",c.getBlurFace());
+            v.put("satisfiedReplyCount",replies.selectCount(new QueryWrapper<Reply>().eq("capsule_id",c.getId()).eq("satisfied",true))); }
         return v;
     }
     public Map<String,Object> discover(int page,int size) {
@@ -46,11 +48,13 @@ public class CapsuleService {
             p=new Poi();p.setId(b.poiId());p.setName(b.poiName());p.setLng(b.lng());p.setLat(b.lat());
             p.setCityCode(b.cityCode());p.setCityName(b.cityName());p.setCreateTime(now());p.setUpdateTime(now());pois.insert(p);
         } else {
-            require(p.getLng()!=null&&p.getLat()!=null&&GeoDistance.distance(p.getLng(),p.getLat(),b.lng(),b.lat())<=20,409,"已有 POI 坐标不一致");
+            if(b.lng()!=null&&b.lat()!=null&&p.getLng()!=null&&p.getLat()!=null)
+                require(GeoDistance.distance(p.getLng(),p.getLat(),b.lng(),b.lat())<=20,409,"已有 POI 坐标不一致");
             require(b.poiName()==null||b.poiName().equals(p.getName()),409,"已有 POI 名称不一致");
         }
         Capsule c=new Capsule();c.setId(id("cap"));c.setTitle(b.title());c.setQuestion(b.question());c.setPoiId(p.getId());c.setPoiName(p.getName());
         c.setLng(p.getLng());c.setLat(p.getLat());c.setCityCode(p.getCityCode());c.setCityName(p.getCityName());
+        c.setSceneId(b.sceneId());c.setSceneName(b.sceneName());
         c.setAnswerBeginTime(b.answerBeginTime());c.setAnswerEndTime(b.answerEndTime());c.setBlurFace(false);c.setStatus("WAITING");
         c.setCreatorId(owner);c.setCreateTime(now());c.setUpdateTime(now());capsules.insert(c);
         media.saveCapsuleRefs(c.getId(),b.mediaList(),owner);

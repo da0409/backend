@@ -16,8 +16,15 @@ public class ApiExceptionHandler {
     }
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Object>> business(BusinessException e) { return error(e.getStatus(),e.getMessage()); }
-    @ExceptionHandler({MethodArgumentNotValidException.class,HttpMessageNotReadableException.class,MethodArgumentTypeMismatchException.class,MissingServletRequestParameterException.class,MissingServletRequestPartException.class})
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Object>> validation(MethodArgumentNotValidException e) {
+        var fe=e.getBindingResult().getFieldErrors();
+        if(!fe.isEmpty()){var f=fe.getFirst();return error(422,(f.getField()==null?"":f.getField()+"：")+sane(f.getDefaultMessage()));}
+        return error(422,"参数校验失败");
+    }
+    @ExceptionHandler({HttpMessageNotReadableException.class,MethodArgumentTypeMismatchException.class,MissingServletRequestParameterException.class,MissingServletRequestPartException.class})
     public ResponseEntity<ApiResponse<Object>> validation(Exception e) { return error(422,"参数校验失败"); }
+    private static String sane(String s){return s==null?"参数不合法":s.replaceAll("\\{\\}","value");}
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Object>> conflict(Exception e) { return error(409,"数据冲突，请刷新后重试"); }
     @ExceptionHandler(MaxUploadSizeExceededException.class)

@@ -1,0 +1,1 @@
+ALTER TABLE t_capsule ADD COLUMN scene_id VARCHAR(32), ADD COLUMN scene_name VARCHAR(128);

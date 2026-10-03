@@ -43,7 +43,8 @@ public class MediaService {
         return items;
     }
     public Map<String,Object> view(Media m) {
-        return map("mediaId",m.getId(),"url","/v1/media/"+m.getId(),"type",m.getType(),"width",m.getWidth(),"height",m.getHeight(),"duration",m.getDuration());
+        return map("mediaId",m.getId(),"url","/v1/media/"+m.getId(),"type",m.getType(),"width",m.getWidth(),"height",m.getHeight(),"duration",m.getDuration(),
+            "mime",m.getMime(),"size",m.getSize(),"filename",m.getFilename());
     }
     public List<Map<String,Object>> capsuleRefs(String id) {
         return capsuleMedia.selectList(new QueryWrapper<CapsuleMedia>().eq("capsule_id",id).orderByAsc("id")).stream().map(r->{

@@ -102,7 +102,9 @@ class BackendApplicationTests {
         var r=request("POST","/tasks/"+capsule+"/accept",a.token(),null);assertEquals(201,r.status(),r.body().toString());return r.data().get("assignmentId").asText();
     }
     private Response checkin(Account a,String assignment) throws Exception {return request("POST","/tasks/"+assignment+"/checkin",a.token(),Map.of("lng",100.1789,"lat",27.1156));}
-    private Response reply(Account a,String assignment) throws Exception {return request("POST","/tasks/"+assignment+"/reply",a.token(),Map.of("content","模拟现场回信"));}
+    private Response reply(Account a,String assignment) throws Exception {
+        return request("POST","/tasks/"+assignment+"/reply",a.token(),Map.of("content","模拟现场回信","mediaList",List.of(Map.of("mediaId",picture(a))),"onSiteDeclaration",true));
+    }
     private String recommendQuery(){return "/tasks/recommend?destinationPoiId=poi_test&travelBeginDate="+Support.today()+"&travelEndDate="+Support.today();}
 
     @Test void completeHttpFlowPersistsAndBuildsTimeline() throws Exception {
@@ -140,8 +142,9 @@ class BackendApplicationTests {
     @Test void stateTransitionsAndCascade() throws Exception {
         var owner=account();var t=account();var c=capsule(owner,Map.of());String a=accept(t,c.id());
         assertEquals(409,request("POST","/tasks/"+c.id()+"/accept",t.token(),null).status());
-        assertEquals(409,reply(t,a).status());assertEquals(200,checkin(t,a).status());assertEquals(201,reply(t,a).status());
-        assertEquals(409,reply(t,a).status());assertEquals(409,checkin(t,a).status());
+        assertEquals(201,reply(t,a).status());                          // 免签到可直接回信
+        assertEquals(409,reply(t,a).status());                          // 不能重复回信
+        assertEquals(409,checkin(t,a).status());                        // 已回信不能再签到
         assertEquals(409,request("PUT","/capsules",owner.token(),Map.of("capsuleId",c.id(),"title","new")).status());
         assertEquals(200,request("DELETE","/capsules/"+c.id(),owner.token(),null).status());
         assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM t_assignment",Integer.class));
@@ -153,14 +156,14 @@ class BackendApplicationTests {
         assertEquals(422,request("POST","/tasks/"+a+"/checkin",t.token(),Map.of("lng",100.1789,"lat",27.1156+300.1*unit)).status());
         assertEquals(200,request("POST","/tasks/"+a+"/checkin",t.token(),Map.of("lng",100.1789,"lat",27.1156+299.9*unit)).status());
     }
-    @Test void datesAndStaleCheckin() throws Exception {
+    @Test void answerWindowGuardsReplyAndExpiry() throws Exception {
         var o=account();var t=account();var c=capsule(o,Map.of("answerBeginTime",Support.today().plusDays(1).toString()));String a=accept(t,c.id());
-        assertEquals(409,checkin(t,a).status());
-        db.update("UPDATE t_capsule SET answer_begin_time=? WHERE id=?",Support.today(),c.id());assertEquals(200,checkin(t,a).status());
-        db.update("UPDATE t_assignment SET checkin_time=DATE_SUB(NOW(),INTERVAL 1 DAY) WHERE id=?",a);
-        assertEquals(409,reply(t,a).status());
-        db.update("UPDATE t_capsule SET answer_begin_time=?,answer_end_time=? WHERE id=?",Support.today().minusDays(2),Support.today().minusDays(1),c.id());
-        assertEquals("EXPIRED",request("GET","/tasks/"+a,t.token(),null).data().get("status").asText());
+        assertEquals(409,request("POST","/tasks/"+a+"/reply",t.token(),Map.of("content","x","mediaList",List.of(Map.of("mediaId",picture(t))),"onSiteDeclaration",true)).status());
+        db.update("UPDATE t_capsule SET answer_begin_time=? WHERE id=?",Support.today(),c.id());
+        assertEquals(201,reply(t,a).status());
+        var fresh=capsule(o,Map.of());String f=accept(t,fresh.id());
+        db.update("UPDATE t_capsule SET answer_begin_time=?,answer_end_time=? WHERE id=?",Support.today().minusDays(2),Support.today().minusDays(1),fresh.id());
+        assertEquals("EXPIRED",request("GET","/tasks/"+f,t.token(),null).data().get("status").asText());
     }
     @Test void validationRejectsBadDatesCoordinatesPaginationAndEmptyReply() throws Exception {
         var o=account();var t=account();var c=capsule(o,Map.of());
@@ -171,13 +174,14 @@ class BackendApplicationTests {
         String a=accept(t,c.id());assertEquals(200,checkin(t,a).status());
         assertEquals(422,request("POST","/tasks/"+a+"/reply",t.token(),Map.of()).status());
     }
-    @Test void matchingFiltersDistanceDatesAndOwnContent() throws Exception {
-        var o=account();var t=account();capsule(o,Map.of());
-        capsule(o,Map.of("poiId","near","poiName","附近","lat",27.1166));
-        capsule(o,Map.of("poiId","far","poiName","远处","lat",28.0));
+    @Test void matchingFiltersCityDatesAndOwnContent() throws Exception {
+        var o=account();var t=account();capsule(o,Map.of("cityCode","HZ"));
+        capsule(o,Map.of("poiId","near","poiName","附近","cityCode","SH"));
+        capsule(o,Map.of("poiId","far","poiName","远处","cityCode","HZ","answerBeginTime",Support.today().plusDays(2).toString()));
         capsule(o,Map.of("answerBeginTime",Support.today().plusDays(2).toString()));
-        capsule(t,Map.of());
-        var r=request("GET",recommendQuery(),t.token(),null);assertEquals(2,r.data().get("total").asInt());
+        capsule(t,Map.of("cityCode","HZ"));
+        var r=request("GET",recommendQuery(),t.token(),null);
+        assertEquals(1,r.data().get("total").asInt());
         assertEquals(0,r.data().get("rows").get(0).get("distanceMeters").asInt());
         assertEquals(422,request("GET",recommendQuery()+"&radiusMeters=10001",t.token(),null).status());
     }
@@ -216,6 +220,41 @@ class BackendApplicationTests {
             assertEquals(List.of(201,409),replies);
         }
     }
+    @Test void coordinateLessCapsuleStoresSceneAndMatches() throws Exception {
+        var o=account();var t=account();capsule(o,Map.of());
+        Map<String,Object> body=new LinkedHashMap<>();
+        body.put("title","无坐标胶囊");body.put("question","需要现场见证");body.put("poiId","poi_nogps");body.put("poiName","无坐标点");
+        body.put("mediaList",List.of(Map.of("mediaId",picture(o))));body.put("answerBeginTime",Support.today().toString());body.put("answerEndTime",Support.today().plusDays(7).toString());body.put("blurFace",false);
+        body.put("sceneId","scene_gate");body.put("sceneName","城门");
+        var r=request("POST","/capsules",o.token(),body);assertEquals(201,r.status(),r.body().toString());
+        String id=r.data().get("capsuleId").asText();
+        var detail=request("GET","/capsules/"+id,o.token(),null).data();
+        assertEquals("scene_gate",detail.get("sceneId").asText());assertEquals("城门",detail.get("sceneName").asText());
+        assertTrue(detail.get("lng").isNull());
+        assertEquals(2,request("GET",recommendQuery(),t.token(),null).data().get("total").asInt());
+    }
+    @Test void cancelAndReclaimAssignment() throws Exception {
+        var o=account();var t=account();var c=capsule(o,Map.of());
+        String a=accept(t,c.id());
+        assertEquals(200,request("POST","/tasks/"+a+"/cancel",t.token(),null).status());
+        assertEquals("CANCELLED",request("GET","/tasks/"+a,t.token(),null).data().get("status").asText());
+        assertEquals(409,request("POST","/tasks/"+a+"/cancel",t.token(),null).status());
+        String a2=accept(t,c.id());assertEquals(a,a2);
+        assertEquals(409,request("POST","/tasks/"+c.id()+"/accept",t.token(),null).status());
+        assertEquals(201,reply(t,a2).status());
+    }
+    @Test void satisfactionMarkOnlyByAuthor() throws Exception {
+        var o=account();var t=account();var x=account();var c=capsule(o,Map.of());
+        String a=accept(t,c.id());String rid=reply(t,a).data().get("replyId").asText();
+        assertEquals(403,request("POST","/replies/"+rid+"/satisfy",x.token(),null).status());
+        assertEquals(403,request("POST","/replies/"+rid+"/satisfy",t.token(),null).status());
+        assertEquals(200,request("POST","/replies/"+rid+"/satisfy",o.token(),null).status());
+        assertTrue(request("GET","/replies/"+rid,o.token(),null).data().get("satisfied").asBoolean());
+        assertEquals(1,request("GET","/capsules/"+c.id(),o.token(),null).data().get("satisfiedReplyCount").asInt());
+        assertEquals(200,request("DELETE","/replies/"+rid+"/satisfy",o.token(),null).status());
+        assertFalse(request("GET","/replies/"+rid,o.token(),null).data().get("satisfied").asBoolean());
+        assertEquals(0,request("GET","/capsules/"+c.id(),o.token(),null).data().get("satisfiedReplyCount").asInt());
+    }
     @Test void healthAndCurrentUserDoNotExposePassword() throws Exception {
         var a=account();var health=request("GET","/health",null,null).data();
         assertEquals("mysql",health.get("database").asText());assertEquals("java25",health.get("runtime").asText());
@@ -243,8 +282,8 @@ class BackendApplicationTests {
     }
     @Test void mediaOnlyReplyRejectsAnotherUsersAsset() throws Exception {
         var o=account();var t=account();var c=capsule(o,Map.of());String a=accept(t,c.id());checkin(t,a);
-        assertEquals(403,request("POST","/tasks/"+a+"/reply",t.token(),Map.of("mediaList",c.payload().get("mediaList"),"blurFace",false)).status());
-        assertEquals(201,request("POST","/tasks/"+a+"/reply",t.token(),Map.of("mediaList",List.of(Map.of("mediaId",picture(t))),"blurFace",false)).status());
+        assertEquals(403,request("POST","/tasks/"+a+"/reply",t.token(),Map.of("content","x","mediaList",c.payload().get("mediaList"),"onSiteDeclaration",true,"blurFace",false)).status());
+        assertEquals(201,request("POST","/tasks/"+a+"/reply",t.token(),Map.of("content","x","mediaList",List.of(Map.of("mediaId",picture(t))),"onSiteDeclaration",true,"blurFace",false)).status());
     }
     @Test void longUnicodePasswordReturnsValidationError() throws Exception {
         assertEquals(422,request("POST","/auth/login",null,Map.of("username","unknown","password","汉".repeat(40))).status());

@@ -23,6 +23,8 @@ public class TaskController {
     public ApiResponse<?> accept(@PathVariable String id,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.accept(id,user.getId()));}
     @PostMapping("/{id}/checkin")
     public ApiResponse<?> checkin(@PathVariable String id,@Valid @RequestBody Requests.Checkin body,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.checkin(id,body,user.getId()));}
+    @PostMapping("/{id}/cancel")
+    public ApiResponse<?> cancel(@PathVariable String id,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.cancel(id,user.getId()));}
     @PostMapping("/{id}/reply") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
     public ApiResponse<?> reply(@PathVariable String id,@Valid @RequestBody Requests.ReplyCreate body,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.submit(id,body,user));}
     @GetMapping("/{id}") public ApiResponse<?> detail(@PathVariable String id,@RequestAttribute("currentUser") User user) {return ApiResponse.ok(service.detail(id,user.getId()));}

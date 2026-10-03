@@ -15,9 +15,17 @@ public class ReplyService {
     public Map<String,Object> view(Reply r) {
         return map("replyId",r.getId(),"capsuleId",r.getCapsuleId(),"assignmentId",r.getAssignmentId(),"travelerId",r.getTravelerId(),
             "travelerName",r.getTravelerName(),"content",r.getContent(),"mediaList",media.replyRefs(r.getId()),"createTime",time(r.getCreateTime()),
-            "lng",r.getLng(),"lat",r.getLat(),"onSiteDeclaration",r.getOnSiteDeclaration(),"privacyProcessed",false);
+            "lng",r.getLng(),"lat",r.getLat(),"onSiteDeclaration",r.getOnSiteDeclaration(),"satisfied",Boolean.TRUE.equals(r.getSatisfied()),
+            "satisfiedTime",time(r.getSatisfiedTime()),"privacyProcessed",false);
     }
     public Map<String,Object> detail(String id) { Reply r=replies.selectById(id);require(r!=null,404,"回信不存在");return view(r); }
+    @Transactional
+    public Map<String,Object> satisfy(String id,String user,boolean satisfied) {
+        Reply r=replies.selectById(id);require(r!=null,404,"回信不存在");
+        Capsule c=cs.get(r.getCapsuleId(),true);require(user.equals(c.getCreatorId()),403,"仅发布者可以评价回信");
+        r.setSatisfied(satisfied);r.setSatisfiedTime(satisfied?now():null);replies.updateById(r);
+        return map("replyId",r.getId(),"satisfied",satisfied,"satisfiedTime",time(r.getSatisfiedTime()));
+    }
     public Map<String,Object> list(String capsuleId,int page,int size) {
         cs.get(capsuleId,false);return page(replies.selectList(new QueryWrapper<Reply>().eq("capsule_id",capsuleId).orderByDesc("create_time").orderByAsc("id")).stream().map(this::view).toList(),page,size);
     }

@@ -37,6 +37,12 @@ public class Capsule {
     /** POI纬度，地理围栏匹配用（DB字段：lat） */
     private Double lat;
 
+    /** 预制场景ID（可选，描述稿 A-09，DB字段：scene_id），无则直接用自定义 POI */
+    private String sceneId;
+
+    /** 预制场景名称（可选，DB字段：scene_name） */
+    private String sceneName;
+
     /** 城市编码（讨论稿 B-02/D-03，DB字段：city_code） */
     private String cityCode;
 

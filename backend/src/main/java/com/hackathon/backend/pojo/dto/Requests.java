@@ -15,9 +15,10 @@ public final class Requests {
     public record MediaRef(@NotBlank @Size(max=32) String mediaId, @Size(max=255) String caption, String type) {}
     public record CapsuleCreate(@NotBlank @Size(max=128) String title, @NotBlank @Size(max=512) String question,
           @NotBlank @Size(max=32) String poiId, @Size(max=128) String poiName,
-          @NotNull @DecimalMin("-180") @DecimalMax("180") Double lng,
-          @NotNull @DecimalMin("-90") @DecimalMax("90") Double lat,
+          @DecimalMin("-180") @DecimalMax("180") Double lng,
+          @DecimalMin("-90") @DecimalMax("90") Double lat,
           @Size(max=16) String cityCode, @Size(max=64) String cityName,
+          @Size(max=32) String sceneId, @Size(max=128) String sceneName,
           @NotNull @Size(min=1,max=10) List<@Valid MediaRef> mediaList,
           @NotNull LocalDate answerBeginTime, @NotNull LocalDate answerEndTime, Boolean blurFace) {}
     public record CapsuleUpdate(@NotBlank @Size(max=32) String capsuleId,
@@ -27,6 +28,6 @@ public final class Requests {
           LocalDate answerBeginTime,LocalDate answerEndTime,Boolean blurFace) {}
     public record Checkin(@NotNull @DecimalMin("-180") @DecimalMax("180") Double lng,
                           @NotNull @DecimalMin("-90") @DecimalMax("90") Double lat) {}
-    public record ReplyCreate(@Size(max=5000) String content, @Size(max=10) List<@Valid MediaRef> mediaList,
-                              Boolean blurFace, Boolean onSiteDeclaration) {}
+    public record ReplyCreate(@NotBlank @Size(max=5000) String content, @NotEmpty @Size(max=10) List<@Valid MediaRef> mediaList,
+                              Boolean blurFace, @NotNull Boolean onSiteDeclaration) {}
 }
