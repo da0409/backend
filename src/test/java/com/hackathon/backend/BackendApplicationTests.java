@@ -59,7 +59,7 @@ class BackendApplicationTests {
     @BeforeEach void clean() {
         String database=db.queryForObject("SELECT DATABASE()",String.class);
         assertEquals("capsule_java_test",database);
-        for(String table:List.of("t_reply_media","t_capsule_media","t_reply","t_assignment","t_capsule","t_media","t_auth_session","t_poi","t_user"))
+        for(String table:List.of("t_trip","t_reply_media","t_capsule_media","t_reply","t_assignment","t_capsule","t_media","t_auth_session","t_poi","t_user"))
             db.execute("DELETE FROM "+table);
     }
     private Response request(String method,String path,String token,Object body) throws Exception {
@@ -248,5 +248,57 @@ class BackendApplicationTests {
     }
     @Test void longUnicodePasswordReturnsValidationError() throws Exception {
         assertEquals(422,request("POST","/auth/login",null,Map.of("username","unknown","password","汉".repeat(40))).status());
+    }
+
+    private Map<String,Object> tripInput(boolean consent) {
+        return Map.of("destinationPoiId","poi_test","arrivalDate",Support.today().toString(),
+            "departureDate",Support.today().plusDays(3).toString(),"participatesInMatching",consent);
+    }
+    @Test void tripsPersistAcrossSessionsAndEnforceOwnership() throws Exception {
+        var a=account();var b=account();capsule(b,Map.of());
+        assertEquals(401,request("GET","/trips",null,null).status());
+        var created=request("POST","/trips",a.token(),tripInput(true));
+        assertEquals(201,created.status(),created.body().toString());
+        String id=created.data().get("tripId").asText();
+        assertEquals(a.id(),created.data().get("travelerId").asText());
+        assertEquals(200,request("PUT","/trips/active",a.token(),Map.of("tripId",id)).status());
+        for(String method:List.of("GET","PUT","DELETE"))
+            assertEquals(404,request(method,"/trips/"+id,b.token(),method.equals("PUT")?tripInput(true):null).status());
+        assertEquals(404,request("PUT","/trips/active",b.token(),Map.of("tripId",id)).status());
+        assertEquals(404,request("GET","/trips/"+id+"/matches",b.token(),null).status());
+        assertEquals(0,request("GET","/trips",b.token(),null).data().get("total").asInt());
+        String token=request("POST","/auth/login",null,Map.of("username",a.username(),"password",a.password())).data().get("token").asText();
+        assertEquals(id,request("GET","/trips/active",token,null).data().get("tripId").asText());
+        assertEquals(1,request("GET","/trips/"+id+"/matches",token,null).data().get("total").asInt());
+        assertEquals(200,request("PUT","/trips/"+id,token,tripInput(false)).status());
+        assertTrue(request("GET","/trips/active",token,null).data().isNull());
+        assertEquals(409,request("GET","/trips/"+id+"/matches",token,null).status());
+        assertEquals(409,request("PUT","/trips/active",token,Map.of("tripId",id)).status());
+        assertEquals(200,request("DELETE","/trips/"+id,token,null).status());
+        assertEquals(404,request("GET","/trips/"+id,token,null).status());
+    }
+    @Test void tripValidationAndConcurrentSelection() throws Exception {
+        var a=account();capsule(a,Map.of());
+        for(var change:List.of(Map.<String,Object>of("destinationPoiId","missing"),
+            Map.<String,Object>of("arrivalDate","2099-01-01"),Map.<String,Object>of("departureDate","2000-01-01"))) {
+            var body=new HashMap<>(tripInput(true));body.putAll(change);
+            assertEquals(422,request("POST","/trips",a.token(),body).status());
+        }
+        var missing=new HashMap<>(tripInput(true));missing.remove("participatesInMatching");
+        assertEquals(422,request("POST","/trips",a.token(),missing).status());
+        assertEquals(422,request("GET","/trips?pageSize=101",a.token(),null).status());
+        String first=request("POST","/trips",a.token(),tripInput(true)).data().get("tripId").asText();
+        String second=request("POST","/trips",a.token(),tripInput(true)).data().get("tripId").asText();
+        try(var pool=Executors.newFixedThreadPool(2)) {
+            var results=pool.invokeAll(List.<Callable<Response>>of(
+                ()->request("PUT","/trips/active",a.token(),Map.of("tripId",first)),
+                ()->request("PUT","/trips/active",a.token(),Map.of("tripId",second))));
+            for(var result:results) assertEquals(200,result.get().status(),result.get().body().toString());
+        }
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM t_trip WHERE active=TRUE",Integer.class));
+        String active=request("GET","/trips/active",a.token(),null).data().get("tripId").asText();
+        assertEquals(200,request("DELETE","/trips/"+active,a.token(),null).status());
+        assertTrue(request("GET","/trips/active",a.token(),null).data().isNull());
+        assertEquals(200,request("DELETE","/trips/active",a.token(),null).status());
     }
 }

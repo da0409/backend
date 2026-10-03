@@ -6,6 +6,9 @@ import java.util.List;
 
 public final class Requests {
     private Requests() {}
+    public record TripInput(@NotBlank @Size(max=32) String destinationPoiId,
+            @NotNull LocalDate arrivalDate,@NotNull LocalDate departureDate,@NotNull Boolean participatesInMatching) {}
+    public record ActiveTrip(@NotBlank @Size(max=32) String tripId) {}
     public record Register(@NotBlank @Pattern(regexp="[a-zA-Z0-9_]{3,64}") String username,
                            @NotBlank @Size(min=8,max=64) String password, @NotBlank @Size(max=64) String nickname) {}
     public record Login(@NotBlank @Size(max=64) String username, @NotBlank @Size(max=64) String password) {}
