@@ -2,7 +2,7 @@
 
 ## 工作区与 Java 25
 
-工程位于 /home/tinyblack/backend，远程为 da0409/backend。所有业务代码为 Java；旧项目 /home/tinyblack/hackathon 不参与构建。
+工程位于 /home/tinyblack/backend/backend，远程为 da0409/backend。所有业务代码为 Java；旧项目 /home/tinyblack/hackathon 不参与构建。
 
 当前 WSL 已安装 OpenJDK 25.0.4.1。系统默认 java、javac 指向 Java 25，登录终端通过 /etc/profile.d/java25.sh 设置 JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64。Maven 使用仓库提供的 Wrapper 3.9.16，不必另装 Maven。
 
@@ -11,7 +11,7 @@
 ```bash
 java -version
 javac -version
-cd /home/tinyblack/backend
+cd /home/tinyblack/backend/backend
 bash mvnw -v
 ```
 
@@ -24,7 +24,7 @@ bash mvnw -v
 ```bash
 sudo apt-get update
 sudo apt-get install -y openjdk-25-jdk-headless mysql-server ffmpeg
-cd /home/tinyblack/backend
+cd /home/tinyblack/backend/backend
 sudo systemctl start mysql
 sudo bash scripts/provision-local.sh "$(id -u):$(id -g)"
 bash scripts/test.sh
@@ -38,7 +38,7 @@ sudo bash scripts/install-service.sh "$(id -un)"
 ## 日常使用
 
 ```bash
-cd /home/tinyblack/backend
+cd /home/tinyblack/backend/backend
 
 # 完整构建与 Java/MySQL 测试
 bash scripts/test.sh

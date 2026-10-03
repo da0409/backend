@@ -1,0 +1,24 @@
+:root {
+  --color-background: #FFFFFF;
+  --color-text: #111827;
+  --color-primary: #2563EB;
+  --color-secondary: #64748B;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F3F7FF;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+  --radius-md: 12px;
+  --shadow-soft: 0 5px 18px rgb(17 24 39 / 4%);
+  --content-max-width: 760px;
+  --bottom-nav-height: 64px;
+  --van-primary-color: var(--color-primary);
+  --van-text-color: var(--color-text);
+  --van-font-family: inherit;
+  --van-button-primary-background: var(--color-primary);
+  --van-button-primary-border-color: var(--color-primary);
+  --van-button-radius: 10px;
+  --van-button-default-height: 50px;
+  --van-tabbar-item-active-color: var(--color-primary);
+  --van-tabbar-item-text-color: var(--color-secondary);
+  --van-tabbar-item-font-size: 11px;
+}

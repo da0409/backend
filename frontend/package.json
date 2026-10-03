@@ -1,0 +1,30 @@
+{
+  "name": "houlai-ne",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config vite.config.ts",
+    "test:rest": "node scripts/test-rest.mjs",
+    "test:e2e": "playwright test",
+    "dev:mock": "vite --config vite.config.ts --mode mock",
+    "build:mock": "vite build --config vite.config.ts --mode mock",
+    "type-check": "vue-tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+    "build": "vite build --config vite.config.ts"
+  },
+  "dependencies": {
+    "pinia": "^2.3.1",
+    "vant": "^4.9.20",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^20.17.30",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "esbuild": "^0.28.2",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vue-tsc": "^2.2.8"
+  }
+}

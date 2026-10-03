@@ -37,3 +37,13 @@ build/
 .env.*
 .local/
 var/
+
+node_modules/
+dist/
+test-results/
+playwright-report/
+!frontend/.env.example
+!frontend/.env.mock
+
+!frontend/.vscode/
+!frontend/.vscode/extensions.json

@@ -1,44 +1,50 @@
-# 后来呢 Java 后端
+# 后来呢：前后端统一仓库
 
-沿用现有 Spring Boot 4.1.1、Java 25、MyBatis-Plus、八个 POJO 与 MySQL 表设计，完成 Controller → Service → Mapper 分层。距离计算使用纯 Java Haversine 实现；不使用 Python。
+后续开发统一在 /home/tinyblack/backend 进行，沿用原后端 Git 仓库及历史。
 
-## 开始使用
+```text
+backend/                 ← Git 仓库根目录
+├── frontend/            ← Vue 3 + TypeScript
+├── backend/             ← Java 25 + Spring Boot + MySQL
+├── AGENTS.md
+└── TASKS.md
+```
 
-当前工作目录 /home/tinyblack/backend。Java 25 已安装配置，后台服务 timecapsule-java 正在本机 8081 端口运行。
-健康接口：http://127.0.0.1:8081/v1/health 。8080 属于旧项目，不用于验收本工程。
+## 本机启动
+
+后端后台服务已经切换至新目录：
 
 ```bash
 cd /home/tinyblack/backend
-java -version
-bash scripts/test.sh
-java scripts/Smoke.java
+sudo systemctl start mysql timecapsule-java
+cd frontend
+npm run dev
 ```
 
-最后一条命令会新增明确标注的比赛模拟数据，验证真实 HTTP 完整流程。
-新环境需要先按 [运行指南](docs/RUNNING.md) 配置 JDK、MySQL、ffmpeg 及本地凭据。
+前端 http://127.0.0.1:5173，后端 http://127.0.0.1:8081/v1/health。
+前端 /v1 代理保持不变。第一次克隆后先在 frontend 执行 npm ci。
+新机器按 [后端运行指南](backend/docs/RUNNING.md) 配置 JDK 25、MySQL、ffmpeg 和本地环境变量。
+手动启动后端：在 backend 子目录执行 bash scripts/start.sh（须先构建 jar）。
 
-## 架构
+## 验证
 
-- controller/：HTTP、请求校验、响应转换，只依赖 Service。
-- service/：权限、业务规则、数据库事务。
-- mapper/：MyBatis-Plus BaseMapper 与参数化行锁查询。
-- pojo/entity/：保留现有实体，只补必要持久字段和映射。
-- pojo/dto/：独立请求模型，避免客户端写入实体所有权和状态字段。
-- geo/：纯 Java Haversine 距离计算，用于推荐、签到和 POI 坐标校验。
-- db/migration/：Flyway 版本化迁移，运行时不使用原始清表脚本。
-- scripts/：Shell 环境配置和启动、纯 Java 实时验收工具。
+在仓库根目录执行：
 
-## 已实现与验证
+```bash
+bash scripts/test-layout.sh
+bash backend/scripts/test.sh
+cd frontend
+npm run type-check
+npm run build
+REST_LIVE_BASE=http://127.0.0.1:5173/v1 npm run test:rest
+```
 
-登录、会话、媒体上传、胶囊管理、日期与目的地推荐、领取、300 米签到、回信及地点时间线。
-距离单元测试、MySQL 集成测试及实际接口验收记录见 HANDOFF.md。
-测试连接独立 MySQL 库，未使用 H2/SQLite 替代。
+浏览器测试在 frontend 目录执行 npm run test:e2e（需要受支持的 Node 和浏览器）。
+接口文档见 [行程接口](backend/docs/TRIPS.md)；前端说明见 [frontend/README.md](frontend/README.md)。
 
-正式业务契约以《接口文档(1).md》为准；讨论稿仍待团队确认，不自动变成新需求。
-AI、前端接入、公网部署、取消领取、满意标记不计入本次已实现功能。
-补充字段及边界见 [实现约定](docs/IMPLEMENTATION.md)，操作方法见 [运行指南](docs/RUNNING.md)。
+## 迁移说明
 
-
-## 云端行程
-
-已支持 MySQL 行程存储及按账号共享的当前选择，接口与请求示例见 [行程接口](docs/TRIPS.md)。启动时 Flyway 自动执行 V3，不需要手动建表。
+前端来自 hackathon 本地提交 0ce8933，复制源码、测试、文档和锁文件；没有嵌套 Git 仓库。
+原 /home/tinyblack/hackathon 保留为旧副本，后续不要在那里开发。
+后端配置 .local、媒体 var 和构建产物 target 已移入 backend 子目录并继续忽略，数据库没有迁移或清空。
+Git 提交只能在本仓库进行。若回滚目录重组提交，还需将忽略的运行目录移回原位置并重新安装 systemd 服务；Git 不会自动回滚服务配置或媒体目录。
